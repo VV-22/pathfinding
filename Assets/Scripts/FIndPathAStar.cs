@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 using Unity.Mathematics;
+using Unity.Burst.Intrinsics;
 
 public class PathMarker
 {
@@ -88,14 +89,50 @@ public class FIndPathAStar : MonoBehaviour
         
         Vector3 goalLocation = new Vector3(locations[1].x * maze.scale, 0f, locations[1].z * maze.scale);
         goalNode = new PathMarker(new MapLocation(locations[1].x, locations[1].z) , 0 , 0 , 0  ,Instantiate(end, goalLocation, quaternion.identity), null);
+
+        open.Clear();
+        closed.Clear();
+        open.Add(startNode);
+        lastPos = startNode;
     }
 
-    void Start()
+
+    void Search(PathMarker thisNode)
     {
-        
+        if(thisNode.Equals(goalNode))
+        {
+            //reached final node
+            done = true;
+            return;
+        }
+
+        foreach(MapLocation dir in maze.Directions)
+        {
+            MapLocation neighbor = dir + thisNode.location;
+            if(maze.map[neighbor.x, neighbor.z] == 1)//wall
+                continue;
+            if(neighbor.x > maze.width - 1 || neighbor.z > maze.depth - 1 || neighbor.x < 1 || neighbor.z < 1) // out of bounds
+                continue;
+            if(IsClosed(neighbor)) //already in closedList
+                continue;
+
+            float G = Vector2.Distance(thisNode.location.ToVector(), neighbor.ToVector()) + thisNode.G;//should be 1 for square and 1.414 for diagonal neighbors (futureproofing for diagonal moves)
+            float H = Vector2.Distance(neighbor.ToVector(), goalNode.location.ToVector());
+            float F = G + H;
+            GameObject pathBlock = Instantiate(pathP , new Vector3(neighbor.x * maze.scale , 0f, neighbor.z * maze.scale), Quaternion.identity);
+            
+        }
     }
 
-
+    bool IsClosed(MapLocation marker)
+    {
+        foreach(PathMarker p in closed)
+        {
+            if(p.location.Equals(marker))
+                return true;
+        }
+        return false;
+    }
     void Update()
     {
         if(Input.GetKeyDown(KeyCode.P))
