@@ -41,6 +41,17 @@ public class PathMarker
 
 public class FIndPathAStar : MonoBehaviour
 {
+
+    public Maze maze;
+    public Material closedMaterial;
+    public Material openMaterial;
+
+    List<PathMarker> open = new List<PathMarker>();
+    List<PathMarker> closed = new List<PathMarker>();
+
+    public GameObject start;
+    public GameObject end;
+    public GameObject pathP;
     // Start is called before the first frame update
     void Start()
     {
