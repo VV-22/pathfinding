@@ -21,6 +21,15 @@ public class MapLocation
     public static MapLocation operator +(MapLocation a, MapLocation b)
        => new MapLocation(a.x + b.x, a.z + b.z);
 
+    public override bool Equals(object obj)
+    {
+        if(obj == null || !this.GetType().Equals(obj.GetType()))
+            return false;
+        else
+        {
+            return x == ((MapLocation)obj).x && z == ((MapLocation)obj).z;
+        }
+    }
 }
 
 public class Maze : MonoBehaviour
