@@ -4,6 +4,7 @@ using UnityEngine;
 using System.Linq;
 using Unity.Mathematics;
 using Unity.Burst.Intrinsics;
+using Unity.VisualScripting;
 
 public class PathMarker
 {
@@ -25,10 +26,13 @@ public class PathMarker
     }
     public override bool Equals(object obj)
     {
+        // Debug.Log("checking, current location: " + location.ToVector());
         if(obj == null || this.GetType() != obj.GetType())
             return false;
         PathMarker checkingObj = obj as PathMarker;
-        if(Vector2.Equals(location.ToVector() , checkingObj.location.ToVector())) 
+        // Debug.Log("checking, obj location: " + checkingObj.location.ToVector());
+        //if(Vector2.Equals(location.ToVector() , checkingObj.location.ToVector())) 
+        if(location.Equals(checkingObj.location))
             return true;
         return false;
     }
@@ -116,7 +120,11 @@ public class FIndPathAStar : MonoBehaviour
             if(neighbor.x > maze.width - 1 || neighbor.z > maze.depth - 1 || neighbor.x < 1 || neighbor.z < 1) // out of bounds
                 continue;
             if(IsClosed(neighbor)) //already in closedList
+            {
+                Debug.Log("closed : " + neighbor.x + " , " + neighbor.z);
                 continue;
+
+            }
 
             float G = Vector2.Distance(thisNode.location.ToVector(), neighbor.ToVector()) + thisNode.G;//should be 1 for square and 1.414 for diagonal neighbors (futureproofing for diagonal moves)
             float H = Vector2.Distance(neighbor.ToVector(), goalNode.location.ToVector());
@@ -166,12 +174,29 @@ public class FIndPathAStar : MonoBehaviour
         }
         return false;
     }
+
+    void GetPath()
+    {
+        removeAllMarkers();
+        PathMarker begin = lastPos;
+
+        while(!startNode.Equals(begin) && begin != null)
+        {
+            Instantiate(pathP, new Vector3(begin.location.x * maze.scale , 0, begin.location.z * maze.scale) , Quaternion.identity);
+            begin = begin.parent;
+        }
+
+        Instantiate(pathP, new Vector3(startNode.location.x * maze.scale ,0f, startNode.location.z * maze.scale) , Quaternion.identity);
+    }
     void Update()
     {
         if(Input.GetKeyDown(KeyCode.P))
             BeginSearch();
         
-        if(Input.GetKeyDown(KeyCode.C))
+        if(Input.GetKeyDown(KeyCode.C) && !done)
             Search(lastPos);
+
+        if(Input.GetKeyDown(KeyCode.M))
+            GetPath();
     }
 }
