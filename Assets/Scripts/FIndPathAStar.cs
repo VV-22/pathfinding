@@ -96,9 +96,11 @@ public class FIndPathAStar : MonoBehaviour
         lastPos = startNode;
     }
 
-
+    //open list is when the values have not yet been traversed, closed list is when they have already been traversed
     void Search(PathMarker thisNode)
     {
+        if(thisNode == null)
+            return;
         if(thisNode.Equals(goalNode))
         {
             //reached final node
@@ -121,9 +123,40 @@ public class FIndPathAStar : MonoBehaviour
             float F = G + H;
             GameObject pathBlock = Instantiate(pathP , new Vector3(neighbor.x * maze.scale , 0f, neighbor.z * maze.scale), Quaternion.identity);
             
+            TextMesh[] values = pathBlock.GetComponentsInChildren<TextMesh>();
+            values[0].text = "G: " + G.ToString("0.00");
+            values[1].text = "H: " + H.ToString("0.00");
+            values[2].text = "F: " + F.ToString("0.00");
+
+            if(!UpdateMarker(neighbor, G, H, F, thisNode))// when this is false, it has to be added as a new node in the open list
+                open.Add(new PathMarker(neighbor, G, H ,F, pathBlock, thisNode));
         }
+        open = open.OrderBy(p => p.F).ThenBy(n => n.H).ToList<PathMarker>();//sort values by lowest F, then sub-sort by lowest H. The one at the top of the list will have lowest F and H
+        PathMarker pm = (PathMarker) open.ElementAt(0);// this is the next point
+        closed.Add(pm);
+        open.RemoveAt(0);
+
+        pm.marker.GetComponent<Renderer>().material = closedMaterial;
+
+        lastPos = pm;
     }
 
+    //this method is to update the G, H, F values on the values in the open list when they are re-added as neighbors. Returns false when the location is not present in the open list
+    bool UpdateMarker(MapLocation pos, float g, float h, float f, PathMarker prt)
+    {
+        foreach(PathMarker p in open)
+        {
+            if(p.location.Equals(pos))
+            {
+                p.G = g;
+                p.H = h;
+                p.F = f;
+                p.parent = prt;
+                return true;
+            }
+        }
+        return false;
+    }
     bool IsClosed(MapLocation marker)
     {
         foreach(PathMarker p in closed)
@@ -138,5 +171,7 @@ public class FIndPathAStar : MonoBehaviour
         if(Input.GetKeyDown(KeyCode.P))
             BeginSearch();
         
+        if(Input.GetKeyDown(KeyCode.C))
+            Search(lastPos);
     }
 }
