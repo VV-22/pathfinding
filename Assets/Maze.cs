@@ -30,6 +30,10 @@ public class MapLocation
             return x == ((MapLocation)obj).x && z == ((MapLocation)obj).z;
         }
     }
+    public override int GetHashCode()
+    {
+        return 0;
+    }
 }
 
 public class Maze : MonoBehaviour
